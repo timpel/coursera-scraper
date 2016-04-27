@@ -19,8 +19,9 @@ def get_durations(file_name):
 	# For completed lectures, the previous sibling will be a span; for incomplete lecture there is no previous sibling
 	comp_list = [lecture.previous_sibling for lecture in lectures]
 
+
 	# Use regex to get just the duration component of each lecture link, separately for minutes and seconds
-	durations = [re.findall(r"(\d+(?=m))", str(lecture)) + re.findall(r"(\d+(?=s))", str(lecture)) for lecture in lectures]
+	durations = [re.findall(r"([0-9]+(?= m|m))", str(lecture)) + re.findall(r"(\d+(?=s))", str(lecture)) for lecture in lectures]
 
 	# Get the durations of completed lectures only by only selecting from durations if the corresponding entry in comp_list exists
 	comp_durations = [duration[0] for duration in zip(durations, comp_list) if duration[1]]
@@ -33,8 +34,22 @@ def get_durations(file_name):
 	return (time_format(comp_total), time_format(all_total), comp_total / all_total * 100)
 
 def total_duration(durations):
-	# Multiply the minutes by 60 and add to the seconds component for each lecture duration
-	durations_in_seconds = [int(item[0]) * 60 + int(item[1]) for item in durations]
+	# If duration list is empty, just return 0
+	if not durations:
+		return 0.0
+	
+	durations_in_seconds = []
+
+	# Go through each video duration
+	for item in durations:
+		# If there is a seconds component, store in seconds variable, otherwise set seconds to 0
+		try:
+			seconds = int(item[1])
+		except IndexError:
+			seconds = 0
+
+		# Multiply the minutes by 60 and add to the seconds variable for each lecture duration
+		durations_in_seconds.append(int(item[0]) * 60 + seconds)
 	
 	# Sum up the seconds and return as a float
 	total = sum(durations_in_seconds)
